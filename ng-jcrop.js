@@ -61,7 +61,14 @@
 
         return {
             restrict: 'A',
-            scope: { ngJcrop: '=', thumbnail: '=', selection: '=' },
+            scope: {
+                ngJcrop: '=', 
+                thumbnail: '=', 
+                selection: '=',
+                config: '=',
+                previewConfig: '=',
+                jcropConfig: '='
+            },
             template: ngJcropConfig.template,
             controller: 'JcropController'
         };
@@ -112,19 +119,29 @@
             throw new Error('ngJcrop: attribute `selection` must be an array');
         }
 
+        var cropConfig = ngJcropConfig;
+        if(angular.isObject($scope.config)){
+            angular.extend(cropConfig, $scope.config);
+        }
+        if(angular.isObject($scope.previewConfig)){
+            angular.extend(cropConfig.previewImgStyle, $scope.previewConfig);
+        }
+        if(angular.isObject($scope.jcropConfig)){
+            angular.extend(cropConfig.jcrop, $scope.jcropConfig);
+        }
         /**
          * jquery element storing the main img tag
          * @type {jQuery}
          */
         $scope.mainImg = null;
-        $scope.imgStyle = {'width': ngJcropConfig.jcrop.maxWidth, 'height': ngJcropConfig.jcrop.maxHeight};
+        $scope.imgStyle = {'width': cropConfig.jcrop.maxWidth, 'height': cropConfig.jcrop.maxHeight};
 
         /**
          * jquery element storing the preview img tag
          * @type {jQuery}
          */
         $scope.previewImg = null;
-        $scope.previewImgStyle = ngJcropConfig.previewImgStyle;
+        $scope.previewImgStyle = cropConfig.previewImgStyle;
 
         /**
          * Stores the jcrop instance
@@ -143,16 +160,16 @@
          * @param  {Image} img
          */
         $scope.updateCurrentSizes = function(img){
-            var widthShrinkRatio = img.width / ngJcropConfig.jcrop.maxWidth,
-                heightShrinkRatio = img.height / ngJcropConfig.jcrop.maxHeight,
-                widthConstraining = img.width > ngJcropConfig.jcrop.maxWidth && widthShrinkRatio > heightShrinkRatio,
-                heightConstraining = img.height > ngJcropConfig.jcrop.maxHeight && heightShrinkRatio > widthShrinkRatio;
+            var widthShrinkRatio = img.width / cropConfig.jcrop.maxWidth,
+                heightShrinkRatio = img.height / cropConfig.jcrop.maxHeight,
+                widthConstraining = img.width > cropConfig.jcrop.maxWidth && widthShrinkRatio > heightShrinkRatio,
+                heightConstraining = img.height > cropConfig.jcrop.maxHeight && heightShrinkRatio > widthShrinkRatio;
 
             if (widthConstraining) {
-                $scope.imgStyle.width = ngJcropConfig.jcrop.maxWidth;
+                $scope.imgStyle.width = cropConfig.jcrop.maxWidth;
                 $scope.imgStyle.height = img.height / widthShrinkRatio;
             } else if (heightConstraining) {
-                $scope.imgStyle.height = ngJcropConfig.jcrop.maxHeight;
+                $scope.imgStyle.height = cropConfig.jcrop.maxHeight;
                 $scope.imgStyle.width = img.width / heightShrinkRatio;
             } else {
                 $scope.imgStyle.height = img.height;
@@ -167,13 +184,13 @@
         $scope.getShrinkRatio = function(){
             var img = $('<img>').attr('src', $scope.mainImg[0].src)[0];
 
-            if(ngJcropConfig.jcrop.maxWidth > img.width || ngJcropConfig.jcrop.maxHeight > img.height){
+            if(cropConfig.jcrop.maxWidth > img.width || cropConfig.jcrop.maxHeight > img.height){
                 return 1;
             }
 
-            var widthShrinkRatio = img.width / ngJcropConfig.jcrop.maxWidth,
-                heightShrinkRatio = img.height / ngJcropConfig.jcrop.maxHeight,
-                widthConstraining = img.width > ngJcropConfig.jcrop.maxWidth && widthShrinkRatio > heightShrinkRatio;
+            var widthShrinkRatio = img.width / cropConfig.jcrop.maxWidth,
+                heightShrinkRatio = img.height / cropConfig.jcrop.maxHeight,
+                widthConstraining = img.width > cropConfig.jcrop.maxWidth && widthShrinkRatio > heightShrinkRatio;
 
             if(widthConstraining) {
                 return widthShrinkRatio;
@@ -249,7 +266,7 @@
             var config = angular.extend({
                 onChange: $scope.showPreview,
                 onSelect: $scope.showPreview
-            }, ngJcropConfig.jcrop);
+            }, cropConfig.jcrop);
 
             if( $scope.selection && $scope.selection.length === 6 ){
                 config.setSelect = $scope.selection;
@@ -276,7 +293,7 @@
         $scope.initMainImage = function(src){
             $scope.mainImg = $('<img>').addClass('ng-jcrop-image');
             $scope.mainImg.on('load', $scope.onMainImageLoad);
-            $scope.mainImg.css({ maxWidth: ngJcropConfig.jcrop.maxWidth, maxHeight: ngJcropConfig.jcrop.maxHeight });
+            $scope.mainImg.css({ maxWidth: cropConfig.jcrop.maxWidth, maxHeight: cropConfig.jcrop.maxHeight });
             $scope.mainImg.attr('src', src);
         };
 
@@ -303,10 +320,10 @@
                 $scope.setSelection({
                     x: 0,
                     y: 0,
-                    x2: ngJcropConfig.widthLimit,
-                    y2: ngJcropConfig.heightLimit,
-                    w: ngJcropConfig.widthLimit,
-                    h: ngJcropConfig.heightLimit
+                    x2: cropConfig.widthLimit,
+                    y2: cropConfig.heightLimit,
+                    w: cropConfig.widthLimit,
+                    h: cropConfig.heightLimit
                 });
 
                 $scope.ngJcrop = src;
